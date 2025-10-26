@@ -1,5 +1,7 @@
 {
   "name": "💻 Codey",
-  "description": "Chat with Codey, a chill, Gen Z-flavored AI assistant about coding. Get help, generate code, and catch a vibe. Your ultimate coding partner.",
-  "requestFramePermissions": []
+  "description": "Chat with Codey, an AI assistant designed to help with coding. Get help, generate code, and improve your projects. Your ultimate coding partner.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
 }

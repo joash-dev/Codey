@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChatSession } from '../types';
-import { PlusIcon, ChatBubbleIcon, PencilIcon, TrashIcon, DoubleArrowLeftIcon } from './Icons';
+import { ChatSession, ThemeName, Theme } from '../types';
+import { PlusIcon, ChatBubbleIcon, PencilIcon, TrashIcon, DoubleArrowLeftIcon, MagicWandIcon } from './Icons';
 import ConfirmationModal from './ConfirmationModal';
+import ThemePicker from './ThemePicker';
 
 interface SidebarProps {
   sessions: ChatSession[];
@@ -12,9 +13,17 @@ interface SidebarProps {
   onRenameSession: (id: string, newTitle: string) => void;
   onDeleteSession: (id: string) => void;
   onToggle: () => void;
+  currentTheme: ThemeName | string;
+  availableThemes: Record<string, Theme>;
+  onThemeChange: (theme: ThemeName | string) => void;
+  onOpenAIGenerator: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ sessions, activeSessionId, isOpen, onNewChat, onSelectSession, onRenameSession, onDeleteSession, onToggle }) => {
+const Sidebar: React.FC<SidebarProps> = ({ 
+  sessions, activeSessionId, isOpen, 
+  onNewChat, onSelectSession, onRenameSession, onDeleteSession, onToggle,
+  currentTheme, availableThemes, onThemeChange, onOpenAIGenerator
+}) => {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [tempTitle, setTempTitle] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -70,16 +79,16 @@ const Sidebar: React.FC<SidebarProps> = ({ sessions, activeSessionId, isOpen, on
   
   return (
     <>
-      <aside className={`absolute top-0 left-0 h-full w-72 bg-gradient-to-b from-black/20 to-black/10 backdrop-blur-xl border-r border-white/10 flex flex-col p-3 gap-3 flex-shrink-0 z-20 transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`absolute top-0 left-0 h-full w-[calc(100%-3rem)] sm:w-72 bg-gradient-to-b from-black/20 to-black/10 backdrop-blur-xl border-r border-white/10 flex flex-col p-3 gap-3 flex-shrink-0 z-30 transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex items-center gap-2">
             <button 
                 onClick={onNewChat}
-                className="flex items-center justify-between flex-1 p-3 rounded-lg text-sm font-semibold bg-white/5 hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-400"
+                className="flex items-center justify-between flex-1 p-3 rounded-lg text-sm font-semibold bg-white/5 hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent-400))]"
             >
                 <span>New Chat</span>
                 <PlusIcon />
             </button>
-            <button onClick={onToggle} className="p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-400" aria-label="Close sidebar">
+            <button onClick={onToggle} className="p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent-400))]" aria-label="Close sidebar">
                 <DoubleArrowLeftIcon />
             </button>
         </div>
@@ -113,7 +122,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sessions, activeSessionId, isOpen, on
                       onChange={(e) => setTempTitle(e.target.value)}
                       onBlur={handleConfirmRename}
                       onKeyDown={handleKeyDown}
-                      className="flex-1 bg-transparent border border-purple-400 rounded-md p-0 m-0 leading-tight focus:outline-none -my-1 -mx-2 px-2"
+                      className="flex-1 bg-transparent border border-[hsl(var(--accent-400))] rounded-md p-0 m-0 leading-tight focus:outline-none -my-1 -mx-2 px-2"
                       onClick={(e) => e.stopPropagation()} // Prevent link navigation
                     />
                   ) : (
@@ -121,7 +130,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sessions, activeSessionId, isOpen, on
                   )}
                 </a>
                 {renamingId !== session.id && (
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-black/10 backdrop-blur-sm rounded-md">
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity bg-black/10 backdrop-blur-sm rounded-md">
                     <button onClick={() => handleStartRename(session)} className="p-1.5 text-gray-400 hover:text-white rounded-md hover:bg-white/10" aria-label={`Rename chat: ${session.title}`}>
                       <PencilIcon />
                     </button>
@@ -133,6 +142,20 @@ const Sidebar: React.FC<SidebarProps> = ({ sessions, activeSessionId, isOpen, on
               </div>
             ))}
           </nav>
+        </div>
+        <div className="border-t border-white/10 pt-3 flex items-center gap-2">
+          <button 
+            onClick={onOpenAIGenerator}
+            className="flex-1 flex items-center justify-center gap-2 p-2 rounded-lg text-sm font-semibold bg-white/5 hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent-400))]"
+          >
+            <MagicWandIcon />
+            <span>Generate Theme</span>
+          </button>
+          <ThemePicker 
+            currentTheme={currentTheme}
+            availableThemes={availableThemes}
+            onThemeChange={onThemeChange}
+          />
         </div>
       </aside>
       <ConfirmationModal
