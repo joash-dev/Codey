@@ -91,7 +91,7 @@ const CodeSnippet: React.FC<CodeSnippetProps> = ({ language, children, onRefacto
             .replace(/^### (.*$)/gim, '<h3>$1</h3>')
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/`([^`]+)`/g, '<code class="bg-black/50 text-white/80 px-1 py-0.5 rounded-sm">$1</code>');
+            .replace(/`([^`]+)`/g, '<code>$1</code>');
         return <div className="whitespace-pre-wrap leading-relaxed prose prose-invert prose-sm max-w-none prose-p:my-2" dangerouslySetInnerHTML={{ __html: withFormatting }} />;
     };
 

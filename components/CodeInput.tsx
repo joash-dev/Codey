@@ -17,7 +17,6 @@ const CodeInput: React.FC<CodeInputProps> = ({ onSendMessage, isLoading, initial
   const [suggestion, setSuggestion] = useState('');
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const suggestionRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -174,7 +173,7 @@ const CodeInput: React.FC<CodeInputProps> = ({ onSendMessage, isLoading, initial
 
   return (
     <form onSubmit={handleSubmit} className="p-4">
-      <div className="relative max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         {uploadedFile && (
             <div className="p-2 mb-2 bg-white/5 border border-white/10 rounded-lg w-fit">
                 <div className="relative">
@@ -199,30 +198,35 @@ const CodeInput: React.FC<CodeInputProps> = ({ onSendMessage, isLoading, initial
                 </div>
             </div>
         )}
-        <div className="relative">
-            <div 
-              ref={suggestionRef}
-              className="absolute inset-0 p-4 pl-20 sm:pl-24 pr-12 sm:pr-14 text-gray-500 pointer-events-none whitespace-pre-wrap"
-              style={{
-                fontFamily: textareaRef.current?.style.fontFamily,
-                fontSize: textareaRef.current?.style.fontSize,
-                lineHeight: textareaRef.current?.style.lineHeight,
-                height: textareaRef.current?.clientHeight ? `${textareaRef.current?.clientHeight}px` : 'auto',
-              }}
-            >
-                <span className="invisible">{input}</span>{suggestion}
+        <div className="flex items-end gap-2 bg-white/5 border border-white/10 rounded-2xl p-2 focus-within:ring-2 focus-within:ring-[hsl(var(--accent-400))] transition-all">
+            <ActionButton onClick={() => fileInputRef.current?.click()} disabled={isLoading || isRecording} ariaLabel="Attach file">
+                <PaperclipIcon />
+            </ActionButton>
+            <ActionButton onClick={handleVoiceInput} disabled={isLoading || isRecording || !recognitionRef.current} ariaLabel="Record message">
+                {isRecording ? <SpinnerIcon /> : <MicrophoneIcon />}
+            </ActionButton>
+            
+            <div className="flex-1 grid">
+                <div 
+                  className="col-start-1 row-start-1 p-2 text-gray-500 pointer-events-none whitespace-pre-wrap"
+                >
+                    <span className="invisible">{input}</span>{suggestion}
+                </div>
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Ask Codey anything, attach a file, or use the mic..."
+                  className="col-start-1 row-start-1 w-full bg-transparent p-2 text-white placeholder-gray-500 resize-none overflow-y-hidden focus:outline-none caret-white"
+                  rows={1}
+                  disabled={isLoading || isRecording}
+                />
             </div>
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask Codey anything, attach a file, or use the mic..."
-              className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pl-20 sm:pl-24 pr-12 sm:pr-14 text-white placeholder-gray-500 resize-none overflow-y-hidden focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent-400))] transition-all caret-white"
-              rows={1}
-              disabled={isLoading || isRecording}
-              style={{ background: 'transparent' }} 
-            />
+            
+            <ActionButton onClick={handleSubmit} disabled={(!input.trim() && !uploadedFile) || isLoading} ariaLabel="Send message">
+                <SendIcon />
+            </ActionButton>
         </div>
         <input
           type="file"
@@ -230,19 +234,6 @@ const CodeInput: React.FC<CodeInputProps> = ({ onSendMessage, isLoading, initial
           onChange={handleFileChange}
           className="hidden"
         />
-        <div className="absolute left-3 bottom-3 flex items-center gap-2">
-            <ActionButton onClick={() => fileInputRef.current?.click()} disabled={isLoading || isRecording} ariaLabel="Attach file">
-                <PaperclipIcon />
-            </ActionButton>
-            <ActionButton onClick={handleVoiceInput} disabled={isLoading || isRecording || !recognitionRef.current} ariaLabel="Record message">
-                {isRecording ? <SpinnerIcon /> : <MicrophoneIcon />}
-            </ActionButton>
-        </div>
-        <div className="absolute right-3 bottom-3">
-            <ActionButton onClick={handleSubmit} disabled={(!input.trim() && !uploadedFile) || isLoading} ariaLabel="Send message">
-                <SendIcon />
-            </ActionButton>
-        </div>
       </div>
     </form>
   );

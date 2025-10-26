@@ -1,6 +1,6 @@
 import React from 'react';
 import { Message as MessageType } from '../types';
-import { AiSparkIcon, UserIcon, FileIcon } from './Icons';
+import { FileIcon } from './Icons';
 import CodeSnippet from './CodeSnippet';
 
 interface MessageBubbleProps {
@@ -40,30 +40,64 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onRefactorCode, 
         const code = match[2].trim();
         return <CodeSnippet key={index} language={language} onRefactorCode={onRefactorCode} onExplainCode={onExplainCode}>{code}</CodeSnippet>;
       } else {
-        // Basic markdown support for bold, italic, and inline code.
-        const withFormatting = part
-          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-          .replace(/\*(.*?)\*/g, '<em>$1</em>')
-          .replace(/`([^`]+)`/g, '<code class="bg-black/50 text-white/80 px-1 py-0.5 rounded-sm">$1</code>');
+        const applyInlineMarkdown = (text: string) => {
+          return text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/`([^`]+)`/g, '<code>$1</code>');
+        };
 
-        return <div key={index} className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: withFormatting }} />;
+        let html = part;
+
+        // Process block-level elements first
+        // HR
+        html = html.replace(/^\s*---\s*$/gm, '<hr class="border-white/20">');
+        
+        // Headings
+        html = html.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
+        html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+        html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+        html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+        // Lists (unordered and ordered)
+        const processList = (match: string): string => {
+            const listType = match.match(/^\s*\d+\. /) ? 'ol' : 'ul';
+            const items = match.trim().split('\n').map(item => {
+                const content = item.replace(/^\s*([*+-]|\d+\.) /, '');
+                return `<li>${applyInlineMarkdown(content)}</li>`;
+            }).join('');
+            return `<${listType}>${items}</${listType}>`;
+        };
+        
+        const listBlocks: string[] = [];
+        // Extract and process lists, replacing with placeholders
+        html = html.replace(/^(?:\s*[-*+] .*(?:\n|$))+/gm, (match) => {
+            listBlocks.push(processList(match));
+            return `__LIST_PLACEHOLDER_${listBlocks.length - 1}__`;
+        });
+        html = html.replace(/^(?:\s*\d+\. .*(?:\n|$))+/gm, (match) => {
+            listBlocks.push(processList(match));
+            return `__LIST_PLACEHOLDER_${listBlocks.length - 1}__`;
+        });
+        
+        // Process inline markdown on remaining text
+        html = applyInlineMarkdown(html);
+
+        // Restore lists
+        html = html.replace(/__LIST_PLACEHOLDER_(\d+)__/g, (_, i) => listBlocks[parseInt(i)]);
+
+        return <div key={index} className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: html }} />;
       }
     }).filter(Boolean); // Filter out null parts
   };
 
-  const Icon = isUser ? UserIcon : AiSparkIcon;
   const bubbleClasses = isUser
     ? "bg-black/10"
     : "bg-white/5";
   const alignmentClasses = isUser ? "justify-end" : "justify-start";
 
   return (
-    <div className={`flex items-start gap-2 sm:gap-3 md:gap-4 ${alignmentClasses}`}>
-      {!isUser && (
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-[hsl(var(--accent-500))] to-[hsl(var(--accent-600))] flex items-center justify-center border-2 border-white/20 shadow-lg">
-          <Icon />
-        </div>
-      )}
+    <div className={`flex ${alignmentClasses}`}>
       <div className={`max-w-full md:max-w-3xl w-fit rounded-2xl p-3 sm:p-4 ${bubbleClasses}`}>
         {file && (
             <div className="mb-2">
@@ -83,11 +117,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onRefactorCode, 
             {renderContent(text)}
         </div>
       </div>
-      {isUser && (
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center border-2 border-white/20">
-          <Icon />
-        </div>
-      )}
     </div>
   );
 };
